@@ -20,7 +20,7 @@ spec:
       containers:
         - name: weather-app-container
           # this is the Docker image that you created
-          image: maar0006/cst8918-a01-weather-app:latest
+          image: maar0006/cst8918-a01-weather-app:v3
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
