@@ -21,7 +21,7 @@ FROM base as deps
 WORKDIR /cst8918-a01
 
 ADD package.json ./
-RUN npm install --include=dev
+RUN npm install --include=dev --ignore-scripts
 
 # Setup production node_modules
 FROM base as production-deps
@@ -57,6 +57,7 @@ COPY --from=production-deps /cst8918-a01/node_modules /cst8918-a01/node_modules
 
 COPY --from=build /cst8918-a01/build /cst8918-a01/build
 COPY --from=build /cst8918-a01/public /cst8918-a01/public
+COPY --from=build /cst8918-a01/app /cst8918-a01/app
 COPY --from=build /cst8918-a01/package.json /cst8918-a01/package.json
 
 RUN chown -R student:student /cst8918-a01

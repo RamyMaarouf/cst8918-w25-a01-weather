@@ -16,7 +16,7 @@ export const meta: MetaFunction = () => {
 
 const location = {
   city: 'Ottawa',
-  postalCode: 'K2G 1V8', // Algonquin College, Woodroffe Campus
+  postalCode: 'K2G 1V8', 
   lat: 45.3211,
   lon: -75.7391,
   countryCode: 'CA',
@@ -24,9 +24,6 @@ const location = {
 const units = 'metric'
 
 export async function loader() {
-  // TODO: accept query params for location and units
-  // TODO: look up location by postal code
-
   const data = await fetchWeatherData({
     lat: location.lat,
     lon: location.lon,
@@ -37,7 +34,13 @@ export async function loader() {
 
 export default function CurrentConditions() {
   const { currentConditions } = useLoaderData<typeof loader>()
-  const weather = currentConditions.weather[0]
+  
+  const weather = currentConditions?.weather?.[0]
+  const description = weather?.description || "No description available";
+  const iconCode = weather?.icon || "01d";
+  const windSpeed = currentConditions?.wind?.speed || 0;
+  const humidity = currentConditions?.main?.humidity || 0;
+
   return (
     <>
       <main
@@ -54,41 +57,39 @@ export default function CurrentConditions() {
             (LAT: {location.lat}, LON: {location.lon})
           </span>
         </p>
+
         <h2>Current Conditions</h2>
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'row',
-            gap: '2rem',
-            alignItems: 'center',
-          }}
-        >
-          <img src={getWeatherIconUrl(weather.icon)} alt="" />
+        <div style={{ display: 'flex', flexDirection: 'row', gap: '2rem', alignItems: 'center' }}>
+          <img src={`http://openweathermap.org/img/wn/${iconCode}@2x.png`} alt="" />
           <div style={{ fontSize: '2rem' }}>
-            {currentConditions.main.temp.toFixed(1)}°C
+            {currentConditions?.main?.temp?.toFixed(1) ?? "0"}°C
           </div>
         </div>
-        <p
-          style={{
-            fontSize: '1.2rem',
-            fontWeight: '400',
-          }}
-        >
-          {capitalizeFirstLetter(weather.description)}. Feels like{' '}
-          {currentConditions.main['feels_like'].toFixed(1)}°C.
-          <br />
-          <span style={{ color: 'hsl(220, 23%, 60%)', fontSize: '0.85rem' }}>
-            updated at{' '}
-            {new Intl.DateTimeFormat('en-CA', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-              hour: 'numeric',
-              minute: '2-digit',
-            }).format(currentConditions.dt * 1000)}
-          </span>
+
+        <p style={{ fontSize: '1.2rem', fontWeight: '400', margin: '0' }}>
+          {capitalizeFirstLetter(description)}. Feels like{' '}
+          {currentConditions?.main?.['feels_like']?.toFixed(1) ?? "0"}°C.
         </p>
+
+        <div style={{ display: 'flex', gap: '1.5rem', fontSize: '1rem', color: 'hsl(220, 23%, 40%)', marginTop: '0.5rem' }}>
+          <span> Wind: {currentConditions?.wind?.speed ?? "0"} m/s</span>
+          <span>Humidity: {currentConditions?.main?.humidity ?? "0"}%</span>
+        </div>
+
+        <div style={{ color: 'hsl(220, 23%, 60%)', fontSize: '0.85rem', marginTop: '0.5rem' }}>
+          updated at{' '}
+          {currentConditions?.dt 
+            ? new Intl.DateTimeFormat('en-CA', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+              }).format(currentConditions.dt * 1000)
+            : "N/A"}
+        </div>
       </main>
+
       <section
         style={{
           backgroundColor: 'hsl(220, 54%, 96%)',
@@ -97,8 +98,9 @@ export default function CurrentConditions() {
         }}
       >
         <h2>Raw Data</h2>
-        <pre>{JSON.stringify(currentConditions, null, 2)}</pre>
+        <pre>{JSON.stringify(currentConditions || {}, null, 2)}</pre>
       </section>
+
       <hr style={{ marginTop: '2rem' }} />
       <p>
         Learn how to customize this app. Read the{' '}
@@ -108,8 +110,4 @@ export default function CurrentConditions() {
       </p>
     </>
   )
-}
-
-function getWeatherIconUrl(iconCode: string) {
-  return `http://openweathermap.org/img/wn/${iconCode}@2x.png`
 }
